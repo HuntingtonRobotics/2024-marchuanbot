@@ -22,16 +22,22 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
  */
 public class Robot extends TimedRobot {
 
-  private final WPI_TalonSRX m_leftMotor = new WPI_TalonSRX(6);
-  private final WPI_TalonSRX m_rightMotor = new WPI_TalonSRX(5);
-  private final DifferentialDrive m_robotDrive =
-      new DifferentialDrive(m_leftMotor::set, m_rightMotor::set);
+  private final WPI_TalonSRX frontRight = new WPI_TalonSRX(2);
+  private final WPI_TalonSRX backRight = new WPI_TalonSRX(1);
+  private final WPI_TalonSRX frontLeft = new WPI_TalonSRX(3);
+  private final WPI_TalonSRX backLeft = new WPI_TalonSRX(4);
+  private final DifferentialDrive m_robotDrive;
   private final XboxController m_driverController = new XboxController(0);
   private GenericEntry m_maxSpeed;
 
   public Robot() {
-    SendableRegistry.addChild(m_robotDrive, m_leftMotor);
-    SendableRegistry.addChild(m_robotDrive, m_rightMotor);
+
+    backRight.follow(frontRight);
+    backLeft.follow(frontLeft);    
+    m_robotDrive = new DifferentialDrive(frontLeft::set, frontRight::set);
+
+    SendableRegistry.addChild(m_robotDrive, frontLeft);
+    SendableRegistry.addChild(m_robotDrive, backLeft);
   }
 
   @Override
@@ -39,7 +45,9 @@ public class Robot extends TimedRobot {
     // We need to invert one side of the drivetrain so that positive voltages
     // result in both sides moving forward. Depending on how your robot's
     // gearbox is constructed, you might have to invert the left side instead.
-    m_rightMotor.setInverted(true);
+    frontRight.setInverted(true);
+    backRight.setInverted(true);
+
 
     m_maxSpeed =
     Shuffleboard.getTab("Configuration")
@@ -56,6 +64,7 @@ public class Robot extends TimedRobot {
     // That means that the Y axis of the left stick moves forward
     // and backward, and the X of the right stick turns left and right.
     m_robotDrive.setMaxOutput(m_maxSpeed.getDouble(1.0));
+    //the get left for x and y value are both backwards on the controller
     m_robotDrive.arcadeDrive(-m_driverController.getLeftY(), -m_driverController.getLeftX());
   }
 }
